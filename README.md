@@ -1,2 +1,2 @@
-# improved-giggle
+# 8051 Programmer
 8051 programmer using Arduino ASP and custom software for programming or erasing chip.
