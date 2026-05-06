@@ -64,13 +64,13 @@ def upload_code():
         global current_process
 
         if selected_file == "":
-            output_box.after(0, lambda: output_box.insert(END, "No HEX file selected\n"))
+            output_box.after(0, lambda: output_box.insert(END, "No HEX file selected!\n"))
             return
 
         port = port_combo.get()
 
         if port == "":
-            output_box.after(0, lambda: output_box.insert(END, "No CH340 device detected\n"))
+            output_box.after(0, lambda: output_box.insert(END, "No Programmer Detected!\n"))
             return
 
         mcu = mcu_combo.get().lower()
@@ -153,7 +153,7 @@ def erase_chip():
         if port == "":
             output_box.after(
                 0,
-                lambda: output_box.insert(END, "No CH340 device detected\n")
+                lambda: output_box.insert(END, "No Programmer Detected!\n")
             )
             return
 
@@ -239,7 +239,7 @@ def download_code():
         if port == "":
             output_box.after(
                 0,
-                lambda: output_box.insert(END, "No CH340 device detected\n")
+                lambda: output_box.insert(END, "No Programmer Detected!\n")
             )
             return
 
