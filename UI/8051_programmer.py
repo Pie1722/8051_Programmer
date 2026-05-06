@@ -1,6 +1,9 @@
 from tkinter import *
 from tkinter import ttk, filedialog
 import serial.tools.list_ports
+import subprocess
+import threading
+import signal
 
 # ---------------- WINDOW ----------------
 
@@ -23,6 +26,7 @@ notebook.pack(expand=True, fill="both")
 # ---------------- VARIABLES ----------------
 
 selected_file = ""
+current_process = None
 
 # ---------------- FUNCTIONS ----------------
 
@@ -37,30 +41,194 @@ def browse_file():
         file_entry.delete(0, END)
         file_entry.insert(0, selected_file)
 
-def run_command(action):
-
-    if selected_file == "":
-        output_box.insert(END, "No HEX file selected\n")
-        output_box.see(END)
-        return
-
-    output_box.insert(END, f"\n[{action.upper()}]\n")
-    output_box.insert(END, f"HEX: {selected_file}\n")
-    output_box.insert(END, f"MCU: {mcu_combo.get()}\n")
-    output_box.insert(END, f"PORT: {port_combo.get()}\n")
-
-    output_box.see(END)
-
 def upload_code():
-    if selected_file == "":
-        output_box.insert(END, "No HEX file selected\n")
-        output_box.see(END)
-        return
 
-    output_box.insert(END, f"Uploading: {selected_file}\n")
-    output_box.insert(END, f"MCU: {mcu_combo.get()}\n")
-    output_box.insert(END, f"Port: {port_combo.get()}\n")
-    output_box.see(END)
+    def worker():
+
+        global current_process
+
+        if selected_file == "":
+            output_box.after(0, lambda: output_box.insert(END, "No HEX file selected\n"))
+            return
+
+        port = port_combo.get()
+
+        if port == "":
+            output_box.after(0, lambda: output_box.insert(END, "No CH340 device detected\n"))
+            return
+
+        mcu = mcu_combo.get().lower()
+
+        cmd = (
+            f'"avrdude.exe" '
+            f'-C "avrdude.conf" '
+            f'-c stk500v1 '
+            f'-P {port} '
+            f'-p {mcu} '
+            f'-b 19200 '
+            f'-U flash:w:"{selected_file}":i'
+        )
+
+        output_box.after(
+            0,
+            lambda: (
+                output_box.insert(END, f"\n> {cmd}\n"),
+                output_box.see(END)
+            )
+        )
+
+        try:
+            output_box.after(0, lambda: flash_button.config(state=DISABLED))
+            output_box.after(0, lambda: erase_button.config(state=DISABLED))
+            current_process = subprocess.Popen(
+                cmd,
+                shell=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+                creationflags=subprocess.CREATE_NEW_PROCESS_GROUP
+            )
+
+            for line in current_process.stdout:
+
+                output_box.after(
+                    0,
+                    lambda l=line: (
+                        output_box.insert(END, l),
+                        output_box.see(END)
+                    )
+                )
+
+            current_process.wait()
+
+            output_box.after(
+                0,
+                lambda: (
+                    output_box.insert(END, "\n[Process finished]\n"),
+                    output_box.see(END)
+                )
+            )
+
+        except Exception as e:
+
+            output_box.after(
+                0,
+                lambda: output_box.insert(END, f"\nError: {e}\n")
+            )
+
+        finally:
+            current_process = None
+
+            output_box.after(0, lambda: erase_button.config(state=NORMAL))
+            output_box.after(0, lambda: flash_button.config(state=NORMAL))
+
+    threading.Thread(target=worker, daemon=True).start()
+
+def erase_chip():
+
+    def worker():
+
+        global current_process
+
+        port = port_combo.get()
+
+        if port == "":
+            output_box.after(
+                0,
+                lambda: output_box.insert(END, "No CH340 device detected\n")
+            )
+            return
+
+        mcu = mcu_combo.get().lower()
+
+        cmd = (
+            f'"avrdude.exe" '
+            f'-C "avrdude.conf" '
+            f'-c stk500v1 '
+            f'-P {port} '
+            f'-p {mcu} '
+            f'-b 19200 '
+            f'-e'
+        )
+
+        output_box.after(
+            0,
+            lambda: (
+                output_box.insert(END, f"\n> {cmd}\n"),
+                output_box.see(END)
+            )
+        )
+
+        try:
+
+            output_box.after(0, lambda: erase_button.config(state=DISABLED))
+            output_box.after(0, lambda: flash_button.config(state=DISABLED))
+            current_process = subprocess.Popen(
+                cmd,
+                shell=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+                creationflags=subprocess.CREATE_NEW_PROCESS_GROUP
+            )
+
+            for line in current_process.stdout:
+
+                output_box.after(
+                    0,
+                    lambda l=line: (
+                        output_box.insert(END, l),
+                        output_box.see(END)
+                    )
+                )
+
+            current_process.wait()
+
+            output_box.after(
+                0,
+                lambda: (
+                    output_box.insert(END, "\n[Erase finished]\n"),
+                    output_box.see(END)
+                )
+            )
+
+        except Exception as e:
+
+            output_box.after(
+                0,
+                lambda: output_box.insert(END, f"\nError: {e}\n")
+            )
+
+        finally:
+
+            current_process = None
+
+            output_box.after(0, lambda: erase_button.config(state=NORMAL))
+            output_box.after(0, lambda: flash_button.config(state=NORMAL))
+
+    threading.Thread(target=worker, daemon=True).start()
+
+def cancel_process():
+
+    global current_process
+
+    if current_process:
+
+        try:
+
+            current_process.send_signal(signal.CTRL_BREAK_EVENT)
+
+            output_box.insert(END, "\n[Process cancelled]\n")
+            output_box.see(END)
+
+        except Exception as e:
+
+            output_box.insert(END, f"\nCancel Error: {e}\n")
+            output_box.see(END)
+
+        current_process = None
+        flash_button.config(state=NORMAL)
+        erase_button.config(state=NORMAL)
 
 def get_ports():
     ports = serial.tools.list_ports.comports()
@@ -106,9 +274,15 @@ mcu_combo.place(x=500, y=20)
 mcu_combo.current(0) 
 
 # Buttons 
-Button(Home, text="Flash", width=10, command=lambda: run_command("flash")).place(x=50, y=80) 
-Button(Home, text="Erase", width=10, command=lambda: run_command("erase")).place(x=180, y=80) 
+flash_button = Button(Home, text="Flash", width=10, command=upload_code)
+flash_button.place(x=50, y=80) 
+
+erase_button = Button(Home, text="Erase", width=10, command=erase_chip)
+erase_button.place(x=180, y=80)
+
 Button(Home, text="Download", width=12).place(x=310, y=80) 
+
+Button(Home, text="Cancel", width=10, command=cancel_process).place(x=440, y=80)
 
 # Output box (CMD style) 
 Label(Home, text="CMD").place(x=20, y=130) 
@@ -116,5 +290,5 @@ output_box = Text(Home, height=10, width=65)
 output_box.place(x=20, y=150)
 
 # ---------------- START ----------------
-refresh_ports() #check for new CH340 ports
+refresh_ports()
 window.mainloop()
