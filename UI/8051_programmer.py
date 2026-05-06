@@ -294,13 +294,22 @@ def get_ports():
     return ch340_ports
 
 def refresh_ports():
+
+    current = port_combo.get()
+
     ports = get_ports()
+
     port_combo["values"] = ports
 
-    if ports and port_combo.get() == "":
-        port_combo.current(0)
+    # If current selected port disappeared
+    if current not in ports:
 
-    window.after(1000, refresh_ports)
+        if ports:
+            port_combo.current(0)
+        else:
+            port_combo.set("")
+
+    window.after(100, refresh_ports) #check for COM ports every 100ms
 
 # ---------------- HOME TAB ----------------
 
