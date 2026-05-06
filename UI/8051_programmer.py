@@ -8,7 +8,16 @@ import signal
 # ---------------- WINDOW ----------------
 
 window = Tk()
-window.geometry("700x400")
+
+# Center window
+width = 700
+height = 400
+screen_width = window.winfo_screenwidth()
+screen_height = window.winfo_screenheight()
+x = int((screen_width / 2) - (width / 2))
+y = int((screen_height / 2) - (height / 2))
+
+window.geometry(f"{width}x{height}+{x}+{y}")
 window.title("8051 Programmer")
 window.resizable(False, False)
 # ---------------- NOTEBOOK ----------------
