@@ -4,6 +4,13 @@ import serial.tools.list_ports
 import subprocess
 import threading
 import signal
+import webbrowser
+
+def open_github():
+    webbrowser.open("https://github.com/Pie1722/8051_Programmer")
+
+def open_license():
+    webbrowser.open("https://www.gnu.org/licenses/gpl-3.0.en.html")
 
 # ---------------- WINDOW ----------------
 
@@ -89,6 +96,7 @@ def upload_code():
         try:
             output_box.after(0, lambda: flash_button.config(state=DISABLED))
             output_box.after(0, lambda: erase_button.config(state=DISABLED))
+            output_box.after(0, lambda: download_button.config(state=DISABLED))
             current_process = subprocess.Popen(
                 cmd,
                 shell=True,
@@ -130,6 +138,7 @@ def upload_code():
 
             output_box.after(0, lambda: erase_button.config(state=NORMAL))
             output_box.after(0, lambda: flash_button.config(state=NORMAL))
+            output_box.after(0, lambda: download_button.config(state=NORMAL))
 
     threading.Thread(target=worker, daemon=True).start()
 
@@ -172,6 +181,7 @@ def erase_chip():
 
             output_box.after(0, lambda: erase_button.config(state=DISABLED))
             output_box.after(0, lambda: flash_button.config(state=DISABLED))
+            output_box.after(0, lambda: download_button.config(state=DISABLED))
             current_process = subprocess.Popen(
                 cmd,
                 shell=True,
@@ -214,6 +224,102 @@ def erase_chip():
 
             output_box.after(0, lambda: erase_button.config(state=NORMAL))
             output_box.after(0, lambda: flash_button.config(state=NORMAL))
+            output_box.after(0, lambda: download_button.config(state=NORMAL))
+
+    threading.Thread(target=worker, daemon=True).start()
+
+def download_code():
+
+    def worker():
+
+        global current_process
+
+        port = port_combo.get()
+
+        if port == "":
+            output_box.after(
+                0,
+                lambda: output_box.insert(END, "No CH340 device detected\n")
+            )
+            return
+
+        save_file = filedialog.asksaveasfilename(
+            defaultextension=".hex",
+            filetypes=[("HEX files", "*.hex")]
+        )
+
+        if not save_file:
+            return
+
+        mcu = mcu_combo.get().lower()
+
+        cmd = (
+            f'"avrdude.exe" '
+            f'-C "avrdude.conf" '
+            f'-c stk500v1 '
+            f'-P {port} '
+            f'-p {mcu} '
+            f'-b 19200 '
+            f'-U flash:r:"{save_file}":i'
+        )
+
+        output_box.after(
+            0,
+            lambda: (
+                output_box.insert(END, f"\n> {cmd}\n"),
+                output_box.see(END)
+            )
+        )
+
+        try:
+
+            output_box.after(0, lambda: erase_button.config(state=DISABLED))
+            output_box.after(0, lambda: flash_button.config(state=DISABLED))
+            output_box.after(0, lambda: download_button.config(state=DISABLED))
+
+            current_process = subprocess.Popen(
+                cmd,
+                shell=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+                creationflags=subprocess.CREATE_NEW_PROCESS_GROUP
+            )
+
+            for line in current_process.stdout:
+
+                output_box.after(
+                    0,
+                    lambda l=line: (
+                        output_box.insert(END, l),
+                        output_box.see(END)
+                    )
+                )
+
+            current_process.wait()
+
+            output_box.after(
+                0,
+                lambda: (
+                    output_box.insert(END, "\n[Download finished]\n"),
+                    output_box.see(END)
+                )
+            )
+
+        except Exception as e:
+
+            output_box.after(
+                0,
+                lambda: output_box.insert(END, f"\nError: {e}\n")
+            )
+
+        finally:
+
+            current_process = None
+
+            output_box.after(0, lambda: erase_button.config(state=NORMAL))
+            output_box.after(0, lambda: flash_button.config(state=NORMAL))
+            output_box.after(0, lambda: download_button.config(state=NORMAL))
 
     threading.Thread(target=worker, daemon=True).start()
 
@@ -238,6 +344,7 @@ def cancel_process():
         current_process = None
         flash_button.config(state=NORMAL)
         erase_button.config(state=NORMAL)
+        download_button.config(state=NORMAL)
 
 def get_ports():
     ports = serial.tools.list_ports.comports()
@@ -289,7 +396,8 @@ flash_button.place(x=50, y=80)
 erase_button = Button(Home, text="Erase", width=10, command=erase_chip)
 erase_button.place(x=180, y=80)
 
-Button(Home, text="Download", width=12).place(x=310, y=80) 
+download_button = Button(Home, text="Download", width=10, command=download_code)
+download_button.place(x=310, y=80)
 
 Button(Home, text="Cancel", width=10, command=cancel_process).place(x=440, y=80)
 
@@ -297,6 +405,20 @@ Button(Home, text="Cancel", width=10, command=cancel_process).place(x=440, y=80)
 Label(Home, text="CMD").place(x=20, y=130) 
 output_box = Text(Home, height=10, width=65) 
 output_box.place(x=20, y=150)
+
+# ---------------- ABOUT TAB ----------------
+
+Label(About,text="8051 Programmer",font=("Arial", 16, "bold")).pack(pady=15)
+
+Label(About,text="Simple GUI for programming 8051 using AVRDUDE",font=("Arial", 10)).pack(pady=5)
+
+github_label = Label(About,text="Visit GitHub Page",fg="blue",cursor="hand2",font=("Arial", 10, "underline"))
+github_label.pack(pady=10)
+github_label.bind("<Button-1>", lambda e: open_github())
+
+license_label = Label(About,text="Open Source License (GNU GPL V3.0)",fg="blue",cursor="hand2",font=("Arial", 10, "underline"))
+license_label.pack(pady=5)
+license_label.bind("<Button-1>", lambda e: open_license())
 
 # ---------------- START ----------------
 refresh_ports()
