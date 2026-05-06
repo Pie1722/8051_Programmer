@@ -64,13 +64,13 @@ def upload_code():
         global current_process
 
         if selected_file == "":
-            output_box.after(0, lambda: output_box.insert(END, "No HEX file selected!\n"))
+            output_box.after(0,lambda: (output_box.insert(END, "No HEX file selected!\n", "red"),output_box.see(END)))
             return
-
+        
         port = port_combo.get()
 
         if port == "":
-            output_box.after(0, lambda: output_box.insert(END, "No Programmer Detected!\n"))
+            output_box.after(0,lambda: (output_box.insert(END, "No Programmer Detected!\n", "red"),output_box.see(END)))
             return
 
         mcu = mcu_combo.get().lower()
@@ -85,13 +85,7 @@ def upload_code():
             f'-U flash:w:"{selected_file}":i'
         )
 
-        output_box.after(
-            0,
-            lambda: (
-                output_box.insert(END, f"\n> {cmd}\n"),
-                output_box.see(END)
-            )
-        )
+        output_box.after(0,lambda: (output_box.insert(END, f"\n> {cmd}\n"),output_box.see(END)))
 
         try:
             output_box.after(0, lambda: flash_button.config(state=DISABLED))
@@ -108,30 +102,15 @@ def upload_code():
 
             for line in current_process.stdout:
 
-                output_box.after(
-                    0,
-                    lambda l=line: (
-                        output_box.insert(END, l),
-                        output_box.see(END)
-                    )
-                )
+                output_box.after(0,lambda l=line: (output_box.insert(END, l),output_box.see(END)))
 
             current_process.wait()
 
-            output_box.after(
-                0,
-                lambda: (
-                    output_box.insert(END, "\n[Process finished]\n"),
-                    output_box.see(END)
-                )
-            )
+            output_box.after(0,lambda: (output_box.insert(END, "\n[Process finished]\n"),output_box.see(END)))
 
         except Exception as e:
 
-            output_box.after(
-                0,
-                lambda: output_box.insert(END, f"\nError: {e}\n")
-            )
+            output_box.after(0,lambda: (output_box.insert(END, f"\nError: {e}\n","red"),output_box.see(END)))
 
         finally:
             current_process = None
@@ -151,10 +130,7 @@ def erase_chip():
         port = port_combo.get()
 
         if port == "":
-            output_box.after(
-                0,
-                lambda: output_box.insert(END, "No Programmer Detected!\n")
-            )
+            output_box.after(0,lambda: (output_box.insert(END, "No Programmer Detected!\n","red"),output_box.see(END)))
             return
 
         mcu = mcu_combo.get().lower()
@@ -169,13 +145,7 @@ def erase_chip():
             f'-e'
         )
 
-        output_box.after(
-            0,
-            lambda: (
-                output_box.insert(END, f"\n> {cmd}\n"),
-                output_box.see(END)
-            )
-        )
+        output_box.after(0,lambda: (output_box.insert(END, f"\n> {cmd}\n"),output_box.see(END)))
 
         try:
 
@@ -193,30 +163,15 @@ def erase_chip():
 
             for line in current_process.stdout:
 
-                output_box.after(
-                    0,
-                    lambda l=line: (
-                        output_box.insert(END, l),
-                        output_box.see(END)
-                    )
-                )
+                output_box.after(0,lambda l=line: (output_box.insert(END, l),output_box.see(END)))
 
             current_process.wait()
 
-            output_box.after(
-                0,
-                lambda: (
-                    output_box.insert(END, "\n[Erase finished]\n"),
-                    output_box.see(END)
-                )
-            )
+            output_box.after(0,lambda: (output_box.insert(END, "\n[Erase finished]\n"),output_box.see(END)))
 
         except Exception as e:
 
-            output_box.after(
-                0,
-                lambda: output_box.insert(END, f"\nError: {e}\n")
-            )
+            output_box.after(0,lambda: (output_box.insert(END, f"\nError: {e}\n","red"),output_box.see(END)))
 
         finally:
 
@@ -237,10 +192,7 @@ def download_code():
         port = port_combo.get()
 
         if port == "":
-            output_box.after(
-                0,
-                lambda: output_box.insert(END, "No Programmer Detected!\n")
-            )
+            output_box.after(0,lambda: (output_box.insert(END, "No Programmer Detected!\n","red"),output_box.see(END)))
             return
 
         save_file = filedialog.asksaveasfilename(
@@ -263,13 +215,7 @@ def download_code():
             f'-U flash:r:"{save_file}":i'
         )
 
-        output_box.after(
-            0,
-            lambda: (
-                output_box.insert(END, f"\n> {cmd}\n"),
-                output_box.see(END)
-            )
-        )
+        output_box.after(0,lambda: (output_box.insert(END, f"\n> {cmd}\n"),output_box.see(END)))
 
         try:
 
@@ -288,30 +234,15 @@ def download_code():
 
             for line in current_process.stdout:
 
-                output_box.after(
-                    0,
-                    lambda l=line: (
-                        output_box.insert(END, l),
-                        output_box.see(END)
-                    )
-                )
+                output_box.after(0,lambda l=line: (output_box.insert(END, l),output_box.see(END)))
 
             current_process.wait()
 
-            output_box.after(
-                0,
-                lambda: (
-                    output_box.insert(END, "\n[Download finished]\n"),
-                    output_box.see(END)
-                )
-            )
+            output_box.after(0,lambda: (output_box.insert(END, "\n[Download finished]\n"),output_box.see(END)))
 
         except Exception as e:
 
-            output_box.after(
-                0,
-                lambda: output_box.insert(END, f"\nError: {e}\n")
-            )
+            output_box.after(0,lambda: (output_box.insert(END, f"\nError: {e}\n","red"),output_box.see(END)))
 
         finally:
 
@@ -333,18 +264,23 @@ def cancel_process():
 
             current_process.send_signal(signal.CTRL_BREAK_EVENT)
 
-            output_box.insert(END, "\n[Process cancelled]\n")
+            output_box.insert(END, "\n[Process cancelled]\n","red")
             output_box.see(END)
 
         except Exception as e:
 
-            output_box.insert(END, f"\nCancel Error: {e}\n")
+            output_box.insert(END, f"\nCancel Error: {e}\n","red")
             output_box.see(END)
 
         current_process = None
         flash_button.config(state=NORMAL)
         erase_button.config(state=NORMAL)
         download_button.config(state=NORMAL)
+
+def on_closing():
+
+    cancel_process()
+    window.destroy()
 
 def get_ports():
     ports = serial.tools.list_ports.comports()
@@ -391,24 +327,25 @@ mcu_combo.current(0)
 
 # Buttons 
 flash_button = Button(Home, text="Flash", width=10, command=upload_code)
-flash_button.place(x=50, y=80) 
+flash_button.place(x=80, y=80) 
 
 erase_button = Button(Home, text="Erase", width=10, command=erase_chip)
-erase_button.place(x=180, y=80)
+erase_button.place(x=220, y=80)
 
 download_button = Button(Home, text="Download", width=10, command=download_code)
-download_button.place(x=310, y=80)
+download_button.place(x=360, y=80)
 
-Button(Home, text="Cancel", width=10, command=cancel_process).place(x=440, y=80)
+Button(Home, text="Cancel", width=10, command=cancel_process).place(x=500, y=80)
 
 # Output box (CMD style) 
-Label(Home, text="CMD").place(x=20, y=130) 
+# Label(Home, text="CMD").place(x=20, y=130) 
 output_box = Text(Home, height=10, width=65) 
 output_box.place(x=20, y=150)
+output_box.tag_config("red", foreground="red")
 
 # ---------------- ABOUT TAB ----------------
 
-Label(About,text="8051 Programmer",font=("Arial", 16, "bold")).pack(pady=15)
+Label(About,text="8051 Programmer",font=("Comic Sans MS", 16, "bold")).pack(pady=15)
 
 Label(About,text="Simple GUI for programming 8051 using AVRDUDE",font=("Arial", 10)).pack(pady=5)
 
@@ -422,4 +359,5 @@ license_label.bind("<Button-1>", lambda e: open_license())
 
 # ---------------- START ----------------
 refresh_ports()
+window.protocol("WM_DELETE_WINDOW", on_closing) #terminate all the process and close the window
 window.mainloop()
