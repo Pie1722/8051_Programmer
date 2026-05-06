@@ -330,7 +330,7 @@ if ports:
 
 # MCU 
 Label(Home, text="8051 VARIANT").place(x=500, y=0) 
-mcu_combo = ttk.Combobox(Home, values=["89S51", "89S52", "89C52"], width=10) 
+mcu_combo = ttk.Combobox(Home, values=["89S51", "89S52"], width=10) 
 mcu_combo.place(x=500, y=20) 
 mcu_combo.current(0) 
 
