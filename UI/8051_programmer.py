@@ -25,7 +25,7 @@ screen_width = window.winfo_screenwidth()
 screen_height = window.winfo_screenheight()
 x = int((screen_width / 2) - (width / 2))
 y = int((screen_height / 2) - (height / 2))
-
+window.tk.call('tk', 'scaling', 1.3) # scale the text to 1.0
 window.geometry(f"{width}x{height}+{x}+{y}")
 window.title("8051 Programmer")
 window.resizable(False, False)
