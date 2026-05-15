@@ -7,8 +7,6 @@
    pySerial: For enabling serial ports and com ports.
    ```c
    pip install pyserial
-   or
-   pip3 install pyserial
    ```
 6. Run the code then the GUI will appear.
 7. Upload Arduino ISP code from Arduino IDE to the board.
