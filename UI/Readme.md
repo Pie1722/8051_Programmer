@@ -5,7 +5,7 @@
 3. Use any appropriate IDE ([Visual Studio Code](https://code.visualstudio.com/download)) to to edit the file.
 4. Install required libraries:
    pySerial: For enabling serial ports and com ports.
-   ```Python
+   ```c
    pip install pyserial
    or
    pip3 install pyserial
