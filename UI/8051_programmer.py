@@ -5,6 +5,8 @@ import subprocess
 import threading
 import signal
 import webbrowser
+from ctypes import windll
+windll.shcore.SetProcessDpiAwareness(1) # Dont autoscale the UI 
 
 def open_github():
     webbrowser.open("https://github.com/Pie1722/8051_Programmer")
