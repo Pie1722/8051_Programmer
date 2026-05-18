@@ -3,9 +3,20 @@ from tkinter import ttk, filedialog
 import serial.tools.list_ports
 import subprocess
 import threading
-import signal
 import webbrowser
 from ctypes import windll
+import ctypes
+import sys
+import os
+
+def resource_path(path):
+    try:
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.dirname(os.path.abspath(__file__))
+
+    return os.path.join(base_path, path)
+
 windll.shcore.SetProcessDpiAwareness(1) # Dont autoscale the UI 
 
 def open_github():
@@ -16,8 +27,12 @@ def open_license():
 
 # ---------------- WINDOW ----------------
 
-window = Tk()
+ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(
+    "Pie.8051Programmer.1.0"
+)
 
+window = Tk()
+window.iconbitmap(default=resource_path("prog.ico"))
 # Center window
 width = 700
 height = 400
@@ -77,15 +92,16 @@ def upload_code():
 
         mcu = mcu_combo.get().lower()
 
-        cmd = (
-            f'"avrdude.exe" '
-            f'-C "avrdude.conf" '
-            f'-c stk500v1 '
-            f'-P {port} '
-            f'-p {mcu} '
-            f'-b 19200 '
-            f'-U flash:w:"{selected_file}":i'
-        )
+        cmd = [
+            resource_path("tools/avrdude.exe"),
+            "-C", resource_path("tools/avrdude.conf"),
+            "-c", "stk500v1",
+            "-P", port,
+            "-p", mcu,
+            "-b", "19200",
+            "-U",
+            f"flash:w:{selected_file}:i"
+        ]
 
         output_box.after(0,lambda: (output_box.insert(END, f"\n> {cmd}\n"),output_box.see(END)))
 
@@ -93,26 +109,37 @@ def upload_code():
             output_box.after(0, lambda: flash_button.config(state=DISABLED))
             output_box.after(0, lambda: erase_button.config(state=DISABLED))
             output_box.after(0, lambda: download_button.config(state=DISABLED))
+
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+
             current_process = subprocess.Popen(
                 cmd,
-                shell=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 text=True,
-                creationflags=subprocess.CREATE_NEW_PROCESS_GROUP
+                startupinfo=startupinfo
             )
 
             for line in current_process.stdout:
 
                 output_box.after(0,lambda l=line: (output_box.insert(END, l),output_box.see(END)))
 
-            current_process.wait()
+            if current_process:
+                current_process.wait()
 
-            output_box.after(0,lambda: (output_box.insert(END, "\n[Process finished]\n"),output_box.see(END)))
+            if current_process and current_process.returncode == 0:
+                output_box.after(0,lambda: (output_box.insert(END, "\n[Process finished]\n"),output_box.see(END)))
 
         except Exception as e:
 
-            output_box.after(0,lambda: (output_box.insert(END, f"\nError: {e}\n","red"),output_box.see(END)))
+            output_box.after(
+                0,
+                lambda err=str(e): (
+                    output_box.insert(END, f"\nError: {err}\n", "red"),
+                    output_box.see(END)
+                )
+            )
 
         finally:
             current_process = None
@@ -137,15 +164,15 @@ def erase_chip():
 
         mcu = mcu_combo.get().lower()
 
-        cmd = (
-            f'"avrdude.exe" '
-            f'-C "avrdude.conf" '
-            f'-c stk500v1 '
-            f'-P {port} '
-            f'-p {mcu} '
-            f'-b 19200 '
-            f'-e'
-        )
+        cmd = [
+            resource_path("tools/avrdude.exe"),
+            "-C", resource_path("tools/avrdude.conf"),
+            "-c", "stk500v1",
+            "-P", port,
+            "-p", mcu,
+            "-b", "19200",
+            "-e"
+        ]
 
         output_box.after(0,lambda: (output_box.insert(END, f"\n> {cmd}\n"),output_box.see(END)))
 
@@ -154,26 +181,37 @@ def erase_chip():
             output_box.after(0, lambda: erase_button.config(state=DISABLED))
             output_box.after(0, lambda: flash_button.config(state=DISABLED))
             output_box.after(0, lambda: download_button.config(state=DISABLED))
+
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+
             current_process = subprocess.Popen(
                 cmd,
-                shell=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 text=True,
-                creationflags=subprocess.CREATE_NEW_PROCESS_GROUP
+                startupinfo=startupinfo
             )
 
             for line in current_process.stdout:
 
                 output_box.after(0,lambda l=line: (output_box.insert(END, l),output_box.see(END)))
 
-            current_process.wait()
+            if current_process:
+                current_process.wait()
 
-            output_box.after(0,lambda: (output_box.insert(END, "\n[Erase finished]\n"),output_box.see(END)))
+            if current_process and current_process.returncode == 0:
+                output_box.after(0,lambda: (output_box.insert(END, "\n[Erase finished]\n"),output_box.see(END)))
 
         except Exception as e:
 
-            output_box.after(0,lambda: (output_box.insert(END, f"\nError: {e}\n","red"),output_box.see(END)))
+            output_box.after(
+                0,
+                lambda err=str(e): (
+                output_box.insert(END, f"\nError: {err}\n", "red"),
+                output_box.see(END)
+                )
+            )
 
         finally:
 
@@ -207,15 +245,16 @@ def download_code():
 
         mcu = mcu_combo.get().lower()
 
-        cmd = (
-            f'"avrdude.exe" '
-            f'-C "avrdude.conf" '
-            f'-c stk500v1 '
-            f'-P {port} '
-            f'-p {mcu} '
-            f'-b 19200 '
-            f'-U flash:r:"{save_file}":i'
-        )
+        cmd = [
+            resource_path("tools/avrdude.exe"),
+            "-C", resource_path("tools/avrdude.conf"),
+            "-c", "stk500v1",
+            "-P", port,
+            "-p", mcu,
+            "-b", "19200",
+            "-U",
+            f"flash:r:{save_file}:i"
+        ]
 
         output_box.after(0,lambda: (output_box.insert(END, f"\n> {cmd}\n"),output_box.see(END)))
 
@@ -225,26 +264,36 @@ def download_code():
             output_box.after(0, lambda: flash_button.config(state=DISABLED))
             output_box.after(0, lambda: download_button.config(state=DISABLED))
 
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+
             current_process = subprocess.Popen(
                 cmd,
-                shell=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 text=True,
-                creationflags=subprocess.CREATE_NEW_PROCESS_GROUP
+                startupinfo=startupinfo
             )
 
             for line in current_process.stdout:
 
                 output_box.after(0,lambda l=line: (output_box.insert(END, l),output_box.see(END)))
 
-            current_process.wait()
+            if current_process:
+                current_process.wait()
 
-            output_box.after(0,lambda: (output_box.insert(END, "\n[Download finished]\n"),output_box.see(END)))
+            if current_process and current_process.returncode == 0:
+                output_box.after(0,lambda: (output_box.insert(END, "\n[Download finished]\n"),output_box.see(END)))
 
         except Exception as e:
 
-            output_box.after(0,lambda: (output_box.insert(END, f"\nError: {e}\n","red"),output_box.see(END)))
+            output_box.after(
+                0,
+                lambda err=str(e): (
+                output_box.insert(END, f"\nError: {err}\n", "red"),
+                output_box.see(END)
+                )
+            )
 
         finally:
 
@@ -264,10 +313,12 @@ def cancel_process():
 
         try:
 
-            current_process.send_signal(signal.CTRL_BREAK_EVENT)
+            current_process.terminate()
 
-            output_box.insert(END, "\n[Process cancelled]\n","red")
-            output_box.see(END)
+            output_box.after(0, lambda: (
+                output_box.insert(END, "\n[Process cancelled]\n", "red"),
+                output_box.see(END)
+            ))
 
         except Exception as e:
 
@@ -330,16 +381,16 @@ def add_hover(button, normal_color, hover_color):
 default_color = Button(window).cget("background")
 
 # File selection 
-file_entry = Entry(Home, width=35) 
+file_entry = Entry(Home, width=36) 
 file_entry.place(x=20, y=20) 
 browse_button = Button(Home, text="Browse", command=browse_file)
 add_hover(browse_button, default_color, "#ffffff") 
-browse_button.place(x=300, y=17)
+browse_button.place(x=308, y=17)
 
 # COM port 
-Label(Home, text="COM PORTS").place(x=390, y=0) 
+Label(Home, text="COM PORTS").place(x=450, y=0) 
 port_combo = ttk.Combobox(Home, values=get_ports(), width=10) 
-port_combo.place(x=380, y=20) 
+port_combo.place(x=440, y=20) 
 
 ports = get_ports()
 
@@ -347,9 +398,9 @@ if ports:
     port_combo.current(0)
 
 # MCU 
-Label(Home, text="8051 VARIANT").place(x=500, y=0) 
+Label(Home, text="8051 VARIANT").place(x=576, y=0) 
 mcu_combo = ttk.Combobox(Home, values=["89S51", "89S52"], width=10) 
-mcu_combo.place(x=500, y=20) 
+mcu_combo.place(x=573, y=20) 
 mcu_combo.current(0) 
 
 # Buttons 
