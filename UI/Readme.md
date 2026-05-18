@@ -32,7 +32,7 @@
 4. The .exe file will be under the dist folder.
    ```plaintext
    UI/
-   └── 8051 Programmer.py
+   └── 8051_Programmer.py
    └── prog.ico
    └── tools/
        └── avrdude.exe
