@@ -5,13 +5,39 @@
 3. Use any appropriate IDE ([Visual Studio Code](https://code.visualstudio.com/download)) to to edit the file.
 4. Install required libraries:
    pySerial: For enabling serial ports and com ports.
-   ```Python
+   ```CMD
    pip install pyserial
-   or
-   pip3 install pyserial
    ```
 6. Run the code then the GUI will appear.
 7. Upload Arduino ISP code from Arduino IDE to the board.
 8. Use the GUI to upload the HEX file and flash 8051.
+
+# Create Executable
+
+1. Install pyinstaller
+   ```CMD
+   pip install pyinstaller
+   ```
+2. Open terminal on the main folder.
+3. Execute the command to build the executable file.
+   ```CMD
+   python -m PyInstaller --clean --onefile --windowed --noupx --icon=prog.ico --add-data "prog.ico;." --add-data "tools;tools" 8051_programmer.py
+   ```
+   If the CMD shows error with python not found. Then find the correct path where the pyinstaller in installed and then put the path on the command.
+   For Example:
+   ```CMD
+   C:\Users\HOME-PC\AppData\Local\Python\pythoncore-3.14-64\python.exe -m PyInstaller --clean --onefile --windowed --noupx --icon=prog.ico --add-data "prog.ico;." --add-data "tools;tools" 8051_programmer.py
+   ```
+4. The .exe file will be under the dist folder.
+   ```CMD
+   UI
+   |
+   ---   8051_programmer.py
+   ---   tools/
+   ---   dist/
+           |
+           ---   8051_programmer.exe
+   ```
+   
 
 Note: Project is under development and may contain bugs.
