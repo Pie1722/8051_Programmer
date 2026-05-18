@@ -35,10 +35,10 @@
    └── 8051_Programmer.py
    └── prog.ico
    └── tools/
-       └── avrdude.exe
-       └── avrdude.conf
+         └── avrdude.exe
+         └── avrdude.conf
    └── dist/
-       └── 8051 Programmer.exe
+         └── 8051 Programmer.exe
    ```
    
 Note: Project is under development and may contain bugs.
